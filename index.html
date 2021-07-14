@@ -5,56 +5,56 @@
     <title>RLE sprite editor</title>
     <meta name="description" content="Editor and converter for Run Length Encoded sprites">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="teal">
+    <meta name="theme-color" content="#282828">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        html, body { height: 100%; position: relative; overflow: hidden; background: teal; }
+        html, body { height: 100%; position: relative; overflow-x: hidden; }
+        body { font-family: sans-serif; background: #282828; color: white; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        canvas { position: relative; display: block; }
+        canvas { position: relative; display: block; image-rendering: pixelated; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; margin: 20px auto; }
     </style>
 </head>
 <body>
+<canvas id="canvas"></canvas>
 <script>
-
-let canvas = document.createElement('canvas');
-document.body.appendChild(canvas);
 
 // the 2d drawing api
 let ctx = canvas.getContext('2d');
 //console.log(ctx);
 
 // resize canvas with window
-let w;
-let h;
+let frameWidth = 8;
+let frameHeight = 8;
 let resizeTOID = 0;
 let onR = e => {
     clearTimeout(resizeTOID);
     resizeTOID = setTimeout(_ => {
-        canvas.width = w = window.innerWidth * window.devicePixelRatio;
-        canvas.height = h = window.innerHeight * window.devicePixelRatio;
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
+        canvas.width = frameWidth;
+        canvas.height = frameHeight;
+        let w = Math.min(Math.floor(window.innerWidth / frameWidth), 32) * frameWidth;
+        let h = w / frameWidth * frameHeight;
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
     }, 40);
 };
 onR();
 window.addEventListener('resize', onR);
 
 // init
-let u = 48 * window.devicePixelRatio;
+let u = 4;
 let shapes = [
     time => {
-        ctx.rotate(Math.PI * time / 1000);
-        ctx.fillStyle = 'snow';
-        ctx.fillRect(-u / 2, - u / 2, u, u);
+        ctx.fillStyle = 'teal';
+        ctx.fillRect(0, 0, u, u);
     }
 ];
 
 let blocks = [];
 blocks.push({
-    x: 0,
-    y: 0,
+    x: 2,
+    y: 2,
     shape: 0
 });
 
@@ -62,10 +62,7 @@ blocks.push({
 let onF = time => {
 
     // clear canvas
-    ctx.save();
-    ctx.fillStyle = 'teal';
-    ctx.fillRect(0, 0, w, h);
-    ctx.restore();
+    ctx.clearRect(0, 0, frameWidth, frameHeight);
 
     // draw stuff
     blocks.forEach(block => {
@@ -73,7 +70,7 @@ let onF = time => {
             return;
         }
         ctx.save();
-        ctx.translate(w / 2 + block.x, h / 2 + block.y);
+        ctx.translate(block.x, block.y);
         shapes[block.shape](time);
         ctx.restore();
     });
