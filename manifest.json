@@ -1,12 +1,12 @@
 {
-  "name": "Game name",
-  "short_name": "Game name",
+  "name": "RLE sprite editor",
+  "short_name": "RLE edit",
+  "description": "Editor and converter for Run Length Encoded sprites",
   "start_url": "./",
   "display": "standalone",
   "background_color": "teal",
   "theme_color": "teal",
   "scope": "./",
-  "description": "A game description",
   "icons": [
     {
       "src": "../apple-touch-icon.png",
