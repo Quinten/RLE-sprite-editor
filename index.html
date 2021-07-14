@@ -147,8 +147,11 @@ Object.keys(data).forEach(key => {
 
 frameInput.addEventListener('keyup', e => {
     let frames = data.frames.split('|');
-    frames[currentFrame] = frameInput.value;
+    let values = frameInput.value.split('|');
+    frames.splice(currentFrame, 1, ...values);
     data.frames = frames.join('|');
+    onR();
+    data.currentFrame = currentFrame;
 });
 
 let removeFrame = _ => {
