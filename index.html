@@ -34,8 +34,8 @@
     <input type="text" id="frameInput" title="Current frame string">
 </div>
 <div class="block">
-    <button id="deleteFrameButton" title="Delete frame">&xotime;</button>
-    <button id="duplicateFrameButton" title="Duplicate frame">&xoplus;</button>
+    <button onclick="removeFrame()" title="Delete frame">&xotime;</button>
+    <button onclick="addFrame()" title="Duplicate frame">&xoplus;</button>
     <button id="moveFrameUpButton" title="Move frame up">&uarr;</button>
     <button id="moveFrameDownButton" title="Move frame down">&darr;</button>
 </div>
@@ -76,6 +76,7 @@ let frameWidth = 8;
 let frameHeight = 8;
 let currentFrame = 0;
 let playing = false;
+let nFramesWide = 4;
 
 let data = {
     frames: '$2a4$4a4$4a4$4a4|$10a4$4a4$4a4$4a4|$18a4$4a4$4a4$4a4|$26a4$4a4$4a4$4a4',
@@ -101,7 +102,14 @@ let data = {
         frameInput.value = this.frames.split('|')[v];
     },
     fps: 12,
-    nFramesWide: 4
+    get nFramesWide() {
+        return nFramesWide;
+    },
+    set nFramesWide (v) {
+        nFramesWide = v;
+        document.querySelector('[name="nFramesWide"').value = nFramesWide;
+        onR();
+    }
 };
 
 data.currentFrame = 0;
@@ -133,9 +141,33 @@ frameInput.addEventListener('keyup', e => {
     data.frames = frames.join('|');
 });
 
+let removeFrame = _ => {
+    let frames = data.frames.split('|');
+    if (frames.length === data.nFramesWide) {
+        data.nFramesWide = data.nFramesWide - 1 || 1;
+    }
+    frames.splice(currentFrame, 1);
+    data.frames = frames.join('|');
+    data.currentFrame = (currentFrame % frames.length) || 0;
+    onR();
+};
+
+let addFrame = _ => {
+    let frames = data.frames.split('|');
+    if (frames.length === data.nFramesWide) {
+        data.nFramesWide = data.nFramesWide + 1;
+    }
+    let newFrame = frames[currentFrame];
+    frames.splice(currentFrame, 0, newFrame);
+    data.frames = frames.join('|');
+    data.currentFrame = currentFrame + 1;
+    onR();
+};
+
 // the 2d drawing api
 let ctx = canvas.getContext('2d');
 //console.log(ctx);
+let ctxSheet = spritesheet.getContext('2d');
 
 // resize canvas with window
 let resizeTOID = 0;
@@ -149,10 +181,10 @@ let onR = e => {
         canvas.style.width = w + 'px';
         canvas.style.height = h + 'px';
         // tmp
-        spritesheet.width = 32;
-        spritesheet.height = 8;
-        w = Math.min(Math.floor(window.innerWidth / 32), 8) * 32;
-        h = w / 32 * 8;
+        spritesheet.width = frameWidth * nFramesWide;
+        spritesheet.height = frameHeight * Math.ceil(data.frames.split('|').length / nFramesWide);
+        w = Math.min(Math.floor(window.innerWidth / spritesheet.width), 8) * spritesheet.width;
+        h = w / frameWidth / nFramesWide * frameHeight * Math.ceil(data.frames.split('|').length / nFramesWide);
         spritesheet.style.width = w + 'px';
         spritesheet.style.height = h + 'px';
     }, 40);
@@ -180,14 +212,36 @@ let onF = time => {
         frameData = frameData.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
         [...frameData].forEach((c, i) => {
             let color = data.colors[c];
+            if (color === undefined) {
+                return;
+            }
             let x = i % data.frameWidth;
             let y = Math.floor(i / data.frameWidth);
-            if (color !== undefined) {
-                ctx.fillStyle = color;
-                ctx.fillRect(x, y, 1, 1);
-            }
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, 1, 1);
         });
     }
+
+    // clear spritesheet
+    ctxSheet.clearRect(0, 0, spritesheet.width, spritesheet.height);
+
+    // draw spritesheet
+    data.frames.split('|').forEach((fData, offset) => {
+        ctxSheet.save();
+        ctxSheet.translate((offset % data.nFramesWide) * data.frameWidth, Math.floor(offset / data.nFramesWide) * frameHeight);
+        frameData = fData.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
+        [...frameData].forEach((c, i) => {
+            let color = data.colors[c];
+            if (color === undefined) {
+                return;
+            }
+            let x = i % data.frameWidth;
+            let y = Math.floor(i / data.frameWidth);
+            ctxSheet.fillStyle = color;
+            ctxSheet.fillRect(x, y, 1, 1);
+        });
+        ctxSheet.restore();
+    });
 
     // request next frame
     requestAnimationFrame(onF);
