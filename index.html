@@ -16,10 +16,10 @@
         canvas { image-rendering: pixelated; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
         button { height: 3rem; padding: 0 1rem; vertical-align: middle; background: white; border: 0; border-radius: .25em; }
         .block { display: block; margin: 1rem auto; }
-        input { vertical-align: middle; background: white; border: 0; border-radius: .25em; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
+        input { vertical-align: middle; background: white; box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5); border: 0; border-radius: .25em; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
         input.small { max-width: 3rem; }
         input.medium { max-width: 8rem; }
-        input:disabled { background: grey; }
+        input:disabled { background: #828282; }
     </style>
 </head>
 <body>
@@ -47,10 +47,10 @@
     <button id="animationBoundsRightToRight" title="Animation bounds right to right">&rcub;&rsaquo;</button>
 </div>
 <div class="block">
-    <input type="text" class="small" id="frameWidthInput" title="Frame width" value="8">
-    <input type="text" class="small" id="frameHeightInput" title="Frame height" value="8">
-    <input type="text" class="small" id="fpsInput" title="Horizontal number of frames in spritesheet" value="4">
-    <input type="text" class="small" id="fpsInput" title="Frames per second" value="25">
+    <input type="number" class="small" id="frameWidthInput" title="Frame width" value="8">
+    <input type="number" class="small" id="frameHeightInput" title="Frame height" value="8">
+    <input type="number" class="small" id="fpsInput" title="Horizontal number of frames in spritesheet" value="4">
+    <input type="number" class="small" id="fpsInput" title="Frames per second" value="25">
 </div>
 <div class="block">
     <input type="text" class="small" title="Key" value="$">
