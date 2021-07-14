@@ -27,8 +27,8 @@
 <div class="block">
     <button title="Play animation" onclick="playing = true;">&rtrif;</button>
     <button title="Pause animation" onclick="playing = false;">&FilledSmallSquare;</button>
-    <button title="Previous frame" onclick="playing = false; data.currentFrame = Math.max(data.currentFrame - 1, 0);">&laquo;</button>
-    <button title="Next frame" onclick="playing = false; data.currentFrame = Math.min(data.currentFrame + 1, data.frames.split('|').length - 1);">&raquo;</button>
+    <button title="Previous frame" onclick="playing = false; data.currentFrame = (data.currentFrame - 1 + data.frames.split('|').length) % data.frames.split('|').length;">&laquo;</button>
+    <button title="Next frame" onclick="playing = false; data.currentFrame = (data.currentFrame + 1) % data.frames.split('|').length;">&raquo;</button>
 </div>
 <div class="block">
     <input type="text" id="frameInput" title="Current frame string">
@@ -36,8 +36,8 @@
 <div class="block">
     <button onclick="removeFrame()" title="Delete frame">&xotime;</button>
     <button onclick="addFrame()" title="Duplicate frame">&xoplus;</button>
-    <button id="moveFrameUpButton" title="Move frame up">&uarr;</button>
-    <button id="moveFrameDownButton" title="Move frame down">&darr;</button>
+    <button onclick="moveFrameUp()" title="Move frame up">&uarr;</button>
+    <button onclick="moveFrameDown()" title="Move frame down">&darr;</button>
 </div>
 <canvas id="spritesheet" class="block"></canvas>
 <!--
@@ -74,19 +74,20 @@
 </div>
 <script>
 
-let frameWidth = 8;
-let frameHeight = 8;
-let currentFrame = 0;
 let playing = false;
-let nFramesWide = 5;
-
 let mask = true;
 spritesheet.addEventListener('contextmenu', e => {
     mask = false;
 });
 
+let frameWidth = 8;
+let frameHeight = 8;
+let currentFrame = 0;
+let nFramesWide = 5;
+
 let data = {
     frames: '$2a4$4a4$4a4$4a4|$10a4$4a4$4a4$4a4|$18a4$4a4$4a4$4a4|$26a4$4a4$4a4$4a4|$34a4$4a4$4a4$4a4',
+    fps: 12,
     get frameWidth() {
         return frameWidth;
     },
@@ -111,7 +112,6 @@ let data = {
             mask = true;
         }
     },
-    fps: 12,
     get nFramesWide() {
         return nFramesWide;
     },
@@ -172,6 +172,24 @@ let addFrame = _ => {
     data.frames = frames.join('|');
     data.currentFrame = currentFrame + 1;
     onR();
+};
+
+let moveFrameUp = _ => {
+    let frames = data.frames.split('|');
+    let newFrame = frames[currentFrame];
+    frames.splice(currentFrame, 1);
+    data.currentFrame = (currentFrame + 1) % (frames.length + 1);
+    frames.splice(currentFrame, 0, newFrame);
+    data.frames = frames.join('|');
+};
+
+let moveFrameDown = _ => {
+    let frames = data.frames.split('|');
+    let newFrame = frames[currentFrame];
+    frames.splice(currentFrame, 1);
+    data.currentFrame = (currentFrame + frames.length) % (frames.length + 1);
+    frames.splice(currentFrame, 0, newFrame);
+    data.frames = frames.join('|');
 };
 
 // the 2d drawing api
