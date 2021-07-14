@@ -66,17 +66,11 @@
 </div>
 <div class="block">
     <button id="importButton">import</button>
-    <button id="copyUrlButton">share</button>
+    <button onclick="(_=>copyStringToClipboard(window.location))()">share</button>
     <button id="copyStringButton">cp string</button>
     <button id="copyCodeButton">cp code</button>
 </div>
 <script>
-
-document.querySelectorAll('input').forEach(el => {
-    el.addEventListener('blur', e => {
-        alert(el.value);
-    });
-});
 
 // the 2d drawing api
 let ctx = canvas.getContext('2d');
@@ -154,6 +148,17 @@ if ('serviceWorker' in navigator) {
             //console.log('ServiceWorker registration failed: ', err);
         });
     });
+}
+
+let copyStringToClipboard = str => {
+   let el = document.createElement('textarea');
+   el.value = str;
+   el.setAttribute('readonly', '');
+   el.style = {position: 'absolute', left: '-9999px'};
+   document.body.appendChild(el);
+   el.select();
+   document.execCommand('copy');
+   document.body.removeChild(el);
 }
 
 </script>
