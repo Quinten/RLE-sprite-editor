@@ -25,13 +25,13 @@
 <body>
 <canvas id="canvas" class="block"></canvas>
 <div class="block">
-    <button id="playButton" title="Play animation">&rtrif;</button>
-    <button id="stopButton" title="Pause animation">&FilledSmallSquare;</button>
-    <button id="prevButton" title="Previous frame">&laquo;</button>
-    <button id="nextButton" title="Next frame">&raquo;</button>
+    <button title="Play animation" onclick="playing = true;">&rtrif;</button>
+    <button title="Pause animation" onclick="playing = false;">&FilledSmallSquare;</button>
+    <button title="Previous frame" onclick="playing = false; data.currentFrame = Math.max(data.currentFrame - 1, 0);">&laquo;</button>
+    <button title="Next frame" onclick="playing = false; data.currentFrame = Math.min(data.currentFrame + 1, data.frames.split('|').length - 1);">&raquo;</button>
 </div>
 <div class="block">
-    <input type="text" id="frameInput" title="Frame string" value="$18a4$4a4$4a4$4a4$18">
+    <input type="text" id="frameInput" title="Current frame string">
 </div>
 <div class="block">
     <button id="deleteFrameButton" title="Delete frame">&xotime;</button>
@@ -47,17 +47,17 @@
     <button id="animationBoundsRightToRight" title="Animation bounds right to right">&rcub;&rsaquo;</button>
 </div>
 <div class="block">
-    <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" id="frameWidthInput" title="Frame width" value="8">
-    <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" id="frameHeightInput" title="Frame height" value="8">
-    <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" id="fpsInput" title="Horizontal number of frames in spritesheet" value="4">
-    <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" id="fpsInput" title="Frames per second" value="25">
+    <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="frameWidth" title="Frame width">
+    <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="frameHeight" title="Frame height">
+    <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="nFramesWide" title="Horizontal number of frames in spritesheet">
+    <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="fps" title="Frames per second">
 </div>
 <div class="block">
     <input type="text" class="small" title="Key" value="$">
     <input type="text" class="medium" title="Color of key" value="transparent" disabled>
     <button id="addColorButton" title="Add color">&xoplus;</button>
 </div>
-<div>
+<div id="colorBlocks">
     <div class="block">
         <input type="text" class="small" title="Key" value="a">
         <input type="text" class="medium" title="Color of key" value="teal">
@@ -66,19 +66,78 @@
 </div>
 <div class="block">
     <button id="importButton">import</button>
-    <button onclick="(_=>copyStringToClipboard(window.location))()">share</button>
+    <button onclick="copyStringToClipboard(window.location, this)">share</button>
     <button id="copyStringButton">cp string</button>
     <button id="copyCodeButton">cp code</button>
 </div>
 <script>
+
+let frameWidth = 8;
+let frameHeight = 8;
+let currentFrame = 0;
+let playing = false;
+
+let data = {
+    frames: '$2a4$4a4$4a4$4a4|$10a4$4a4$4a4$4a4|$18a4$4a4$4a4$4a4|$26a4$4a4$4a4$4a4',
+    get frameWidth() {
+        return frameWidth;
+    },
+    set frameWidth (v) {
+        frameWidth = v;
+        onR();
+    },
+    get frameHeight() {
+        return frameHeight;
+    },
+    set frameHeight(v) {
+        frameHeight = v;
+        onR();
+    },
+    get currentFrame() {
+        return currentFrame;
+    },
+    set currentFrame(v) {
+        currentFrame = v;
+        frameInput.value = this.frames.split('|')[v];
+    },
+    fps: 12,
+    nFramesWide: 4
+};
+
+data.currentFrame = 0;
+
+//console.log(JSON.stringify(data));
+
+data.colors = {
+    a: 'teal'
+};
+
+Object.keys(data).forEach(key => {
+    let input = document.querySelector('[name="' + key + '"');
+    if (input === null) {
+        return;
+    }
+    input.value = data[key];
+    input.addEventListener('blur', e => {
+        if (input.type === 'number') {
+            data[key] = Number(input.value);
+        } else {
+            data[key] = input.value;
+        }
+    });
+});
+
+frameInput.addEventListener('keyup', e => {
+    let frames = data.frames.split('|');
+    frames[currentFrame] = frameInput.value;
+    data.frames = frames.join('|');
+});
 
 // the 2d drawing api
 let ctx = canvas.getContext('2d');
 //console.log(ctx);
 
 // resize canvas with window
-let frameWidth = 8;
-let frameHeight = 8;
 let resizeTOID = 0;
 let onR = e => {
     clearTimeout(resizeTOID);
@@ -101,38 +160,34 @@ let onR = e => {
 onR();
 window.addEventListener('resize', onR);
 
-// init
-let u = 4;
-let shapes = [
-    time => {
-        ctx.fillStyle = 'teal';
-        ctx.fillRect(0, 0, u, u);
-    }
-];
-
-let blocks = [];
-blocks.push({
-    x: 2,
-    y: 2,
-    shape: 0
-});
-
 // animation loop
+let timer = 0;
 let onF = time => {
+
+    if (timer < time - 1000 / data.fps) {
+        timer = time;
+        if (playing) {
+            data.currentFrame = (data.currentFrame + 1) % (data.frames.split('|').length);
+        }
+    }
 
     // clear canvas
     ctx.clearRect(0, 0, frameWidth, frameHeight);
 
     // draw stuff
-    blocks.forEach(block => {
-        if (block === undefined) {
-            return;
-        }
-        ctx.save();
-        ctx.translate(block.x, block.y);
-        shapes[block.shape](time);
-        ctx.restore();
-    });
+    let frameData = data.frames.split('|')[currentFrame];
+    if (frameData !== undefined) {
+        frameData = frameData.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
+        [...frameData].forEach((c, i) => {
+            let color = data.colors[c];
+            let x = i % data.frameWidth;
+            let y = Math.floor(i / data.frameWidth);
+            if (color !== undefined) {
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, 1, 1);
+            }
+        });
+    }
 
     // request next frame
     requestAnimationFrame(onF);
@@ -150,7 +205,9 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-let copyStringToClipboard = str => {
+let copyStringToClipboard = (str, target) => {
+   let oldHtml = target.innerHTML;
+   target.innerHTML = 'Copied!';
    let el = document.createElement('textarea');
    el.value = str;
    el.setAttribute('readonly', '');
@@ -159,6 +216,9 @@ let copyStringToClipboard = str => {
    el.select();
    document.execCommand('copy');
    document.body.removeChild(el);
+   setTimeout(_ => {
+        target.innerHTML = oldHtml;
+   }, 2000);
 }
 
 </script>
