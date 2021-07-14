@@ -80,6 +80,11 @@ let currentFrame = 0;
 let playing = false;
 let nFramesWide = 5;
 
+let mask = true;
+spritesheet.addEventListener('contextmenu', e => {
+    mask = false;
+});
+
 let data = {
     frames: '$2a4$4a4$4a4$4a4|$10a4$4a4$4a4$4a4|$18a4$4a4$4a4$4a4|$26a4$4a4$4a4$4a4|$34a4$4a4$4a4$4a4',
     get frameWidth() {
@@ -102,6 +107,9 @@ let data = {
     set currentFrame(v) {
         currentFrame = v;
         frameInput.value = this.frames.split('|')[v];
+        if (!playing) {
+            mask = true;
+        }
     },
     fps: 12,
     get nFramesWide() {
@@ -226,11 +234,18 @@ let onF = time => {
 
     // clear spritesheet
     ctxSheet.clearRect(0, 0, spritesheet.width, spritesheet.height);
+    if (mask === true) {
+        ctxSheet.fillStyle = 'rgba(0, 0, 0, .35)';
+        ctxSheet.fillRect(0, 0, spritesheet.width, spritesheet.height);
+    }
 
     // draw spritesheet
     data.frames.split('|').forEach((fData, offset) => {
         ctxSheet.save();
         ctxSheet.translate((offset % data.nFramesWide) * data.frameWidth, Math.floor(offset / data.nFramesWide) * frameHeight);
+        if (mask === true && offset === currentFrame) {
+            ctxSheet.clearRect(0, 0, frameWidth, frameHeight);
+        }
         frameData = fData.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
         [...frameData].forEach((c, i) => {
             let color = data.colors[c];
