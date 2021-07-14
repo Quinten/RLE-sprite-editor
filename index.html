@@ -14,11 +14,12 @@
         body { font-family: sans-serif; background: #282828; color: white; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-size: 1rem; text-align: center; }
         canvas { image-rendering: pixelated; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
-        button { height: 3rem; padding: 0 1rem; vertical-align: middle; }
+        button { height: 3rem; padding: 0 1rem; vertical-align: middle; background: white; border: 0; border-radius: .25em; }
         .block { display: block; margin: 1rem auto; }
-        input { vertical-align: middle; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
+        input { vertical-align: middle; background: white; border: 0; border-radius: .25em; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
         input.small { max-width: 3rem; }
         input.medium { max-width: 8rem; }
+        input:disabled { background: grey; }
     </style>
 </head>
 <body>
@@ -54,21 +55,20 @@
 <div class="block">
     <input type="text" class="small" title="Key" value="$">
     <input type="text" class="medium" title="Color of key" value="transparent" disabled>
-    <button title="Delete color" disabled>&xotime;</button>
-</div>
-<div class="block">
-    <input type="text" class="small" title="Key" value="a">
-    <input type="text" class="medium" title="Color of key" value="teal">
-    <button title="Delete color">&xotime;</button>
-</div>
-<div class="block">
     <button id="addColorButton" title="Add color">&xoplus;</button>
 </div>
+<div>
+    <div class="block">
+        <input type="text" class="small" title="Key" value="a">
+        <input type="text" class="medium" title="Color of key" value="teal">
+        <button title="Delete color">&xotime;</button>
+    </div>
+</div>
 <div class="block">
-    <button id="importButton">import image</button>
+    <button id="importButton">import</button>
+    <button id="copyUrlButton">share</button>
     <button id="copyStringButton">cp string</button>
     <button id="copyCodeButton">cp code</button>
-    <button id="copyUrlButton">cp url</button>
 </div>
 <script>
 
