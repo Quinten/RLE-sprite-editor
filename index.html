@@ -40,12 +40,14 @@
     <button id="moveFrameDownButton" title="Move frame down">&darr;</button>
 </div>
 <canvas id="spritesheet" class="block"></canvas>
+<!--
 <div class="block">
     <button id="animationBoundsLeftToLeft" title="Animation bounds left to left">&lsaquo;&lcub;</button>
     <button id="animationBoundsLeftToRight" title="Animation bounds left to right">&lcub;&rsaquo;</button>
     <button id="animationBoundsRightToLeft" title="Animation bounds right to left">&lsaquo;&rcub;</button>
     <button id="animationBoundsRightToRight" title="Animation bounds right to right">&rcub;&rsaquo;</button>
 </div>
+-->
 <div class="block">
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="frameWidth" title="Frame width">
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="frameHeight" title="Frame height">
@@ -67,8 +69,8 @@
 <div class="block">
     <button id="importButton">import</button>
     <button onclick="copyStringToClipboard(window.location, this)">share</button>
-    <button id="copyStringButton">cp string</button>
-    <button id="copyCodeButton">cp code</button>
+    <button onclick="copyStringToClipboard(data.frames, this)">string</button>
+    <button id="copyCodeButton">code</button>
 </div>
 <script>
 
@@ -76,10 +78,10 @@ let frameWidth = 8;
 let frameHeight = 8;
 let currentFrame = 0;
 let playing = false;
-let nFramesWide = 4;
+let nFramesWide = 5;
 
 let data = {
-    frames: '$2a4$4a4$4a4$4a4|$10a4$4a4$4a4$4a4|$18a4$4a4$4a4$4a4|$26a4$4a4$4a4$4a4',
+    frames: '$2a4$4a4$4a4$4a4|$10a4$4a4$4a4$4a4|$18a4$4a4$4a4$4a4|$26a4$4a4$4a4$4a4|$34a4$4a4$4a4$4a4',
     get frameWidth() {
         return frameWidth;
     },
