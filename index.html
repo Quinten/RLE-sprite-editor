@@ -72,6 +72,12 @@
 </div>
 <script>
 
+document.querySelectorAll('input').forEach(el => {
+    el.addEventListener('blur', e => {
+        alert(el.value);
+    });
+});
+
 // the 2d drawing api
 let ctx = canvas.getContext('2d');
 //console.log(ctx);
