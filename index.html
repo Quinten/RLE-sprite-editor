@@ -12,12 +12,65 @@
     <style>
         html, body { height: 100%; position: relative; overflow-x: hidden; }
         body { font-family: sans-serif; background: #282828; color: white; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        canvas { position: relative; display: block; image-rendering: pixelated; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; margin: 20px auto; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-size: 1rem; text-align: center; }
+        canvas { image-rendering: pixelated; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
+        button { height: 3rem; padding: 0 1rem; vertical-align: middle; }
+        .block { display: block; margin: 1rem auto; }
+        input { vertical-align: middle; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
+        input.small { max-width: 3rem; }
+        input.medium { max-width: 8rem; }
     </style>
 </head>
 <body>
-<canvas id="canvas"></canvas>
+<canvas id="canvas" class="block"></canvas>
+<div class="block">
+    <button id="playButton" title="Play animation">&rtrif;</button>
+    <button id="stopButton" title="Pause animation">&FilledSmallSquare;</button>
+    <button id="prevButton" title="Previous frame">&laquo;</button>
+    <button id="nextButton" title="Next frame">&raquo;</button>
+</div>
+<div class="block">
+    <input type="text" id="frameInput" title="Frame string" value="$18a4$4a4$4a4$4a4$18">
+</div>
+<div class="block">
+    <button id="deleteFrameButton" title="Delete frame">&xotime;</button>
+    <button id="duplicateFrameButton" title="Duplicate frame">&xoplus;</button>
+    <button id="moveFrameUpButton" title="Move frame up">&uarr;</button>
+    <button id="moveFrameDownButton" title="Move frame down">&darr;</button>
+</div>
+<canvas id="spritesheet" class="block"></canvas>
+<div class="block">
+    <button id="animationBoundsLeftToLeft" title="Animation bounds left to left">&lsaquo;&lcub;</button>
+    <button id="animationBoundsLeftToRight" title="Animation bounds left to right">&lcub;&rsaquo;</button>
+    <button id="animationBoundsRightToLeft" title="Animation bounds right to left">&lsaquo;&rcub;</button>
+    <button id="animationBoundsRightToRight" title="Animation bounds right to right">&rcub;&rsaquo;</button>
+</div>
+<div class="block">
+    <input type="text" class="small" id="frameWidthInput" title="Frame width" value="8">
+    <input type="text" class="small" id="frameHeightInput" title="Frame height" value="8">
+    <input type="text" class="small" id="fpsInput" title="Horizontal number of frames in spritesheet" value="4">
+    <input type="text" class="small" id="fpsInput" title="Frames per second" value="25">
+</div>
+<div class="block">
+    <input type="text" class="small" title="Key" value="$">
+    <input type="text" class="medium" title="Color of key" value="transparent" disabled>
+    <button title="Delete color" disabled>&xotime;</button>
+</div>
+<div class="block">
+    <input type="text" class="small" title="Key" value="a">
+    <input type="text" class="medium" title="Color of key" value="teal">
+    <button title="Delete color">&xotime;</button>
+</div>
+<div class="block">
+    <button id="addColorButton" title="Add color">&xoplus;</button>
+</div>
+<div class="block">
+    <button id="importButton">import image</button>
+</div>
+<div class="block">
+    <button id="copyCodeButton">copy code</button>
+    <button id="copyStringButton">copy string</button>
+</div>
 <script>
 
 // the 2d drawing api
@@ -37,6 +90,13 @@ let onR = e => {
         let h = w / frameWidth * frameHeight;
         canvas.style.width = w + 'px';
         canvas.style.height = h + 'px';
+        // tmp
+        spritesheet.width = 32;
+        spritesheet.height = 8;
+        w = Math.min(Math.floor(window.innerWidth / 32), 8) * 32;
+        h = w / 32 * 8;
+        spritesheet.style.width = w + 'px';
+        spritesheet.style.height = h + 'px';
     }, 40);
 };
 onR();
