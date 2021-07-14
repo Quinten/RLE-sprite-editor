@@ -43,11 +43,10 @@ window.addEventListener('resize', onR);
 
 // init
 let u = 48 * window.devicePixelRatio;
-let shapeVisible = true;
 let shapes = [
     time => {
         ctx.rotate(Math.PI * time / 1000);
-        ctx.fillStyle = (shapeVisible) ? 'snow' : 'turquoise';
+        ctx.fillStyle = 'snow';
         ctx.fillRect(-u / 2, - u / 2, u, u);
     }
 ];
@@ -83,45 +82,6 @@ let onF = time => {
     requestAnimationFrame(onF);
 };
 setTimeout(onF, 50, 0);
-
-// pointer events
-// mousedown | mousemove | mouseup
-// touchstart | touchmove | touchend
-
-canvas.addEventListener('mousedown', e => {
-
-    let pointerX = e.clientX * window.devicePixelRatio;
-    let pointerY = e.clientY * window.devicePixelRatio;
-
-    handlePointer(pointerX, pointerY);
-});
-
-canvas.addEventListener('touchstart', e => {
-
-    e.preventDefault(); // this prevents the mousedown from firing
-
-    let pointerX = e.changedTouches[0].clientX * window.devicePixelRatio;
-    let pointerY = e.changedTouches[0].clientY * window.devicePixelRatio;
-
-    handlePointer(pointerX, pointerY);
-});
-
-let handlePointer = (pointerX, pointerY) => {
-
-    let index = blocks.findIndex(block => {
-        if (block === undefined) {
-            return false;
-        }
-        let x = w / 2 + block.x - u / 2;
-        let y = h / 2 + block.y - u / 2;
-        return !(pointerX < x || pointerY < y || pointerX > x + u || pointerY > y + u);
-    });
-    if (index > -1) {
-        if (blocks[index] !== undefined) {
-            shapeVisible = !shapeVisible;
-        }
-    }
-};
 
 // register service worker for PWA
 if ('serviceWorker' in navigator) {
