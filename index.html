@@ -56,16 +56,11 @@
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="fps" title="Frames per second">
 </div>
 <div class="block">
-    <input type="text" class="small" title="Key" name="transparentKey">
-    <input type="text" class="medium" title="Color of key" value="transparent" disabled>
-    <button id="addColorButton" title="Add color">&xoplus;</button>
+    <input type="text" maxlength="1" class="small" title="Transparent key" name="transparentKey">
+    <input type="text" class="medium" value="transparent" title="Transparent color" disabled>
+    <button onclick="addColorBlock()" title="Add color">&xoplus;</button>
 </div>
 <div id="colorBlocks">
-    <div class="block">
-        <input type="text" class="small" title="Key" value="a">
-        <input type="text" class="medium" title="Color of key" value="teal">
-        <button title="Delete color">&xotime;</button>
-    </div>
 </div>
 <div class="block">
     <button id="importButton">import</button>
@@ -77,6 +72,14 @@
     <a href="https://github.com/Quinten/RLE-sprite-editor" target="_blank" rel="noopener">read me</a>
 </div>
 <script>
+
+let getColorBlock = (key, color) => `
+    <div class="block">
+        <input type="text" maxlength="1" class="small" title="Key" onfocus="pendingColorKey = this.value;" onblur="updateColorKey(this)" value="${key}">
+        <input type="text" class="medium" title="Color" onblur="updateColor(this)"  value="${color}">
+        <button onclick="removeColor(this)" title="Delete color">&xotime;</button>
+    </div>`;
+
 
 let playing = false;
 let mask = true;
@@ -91,7 +94,7 @@ let nFramesWide = 5;
 let transparentKey = '$';
 
 let data = {
-    frames: '$2a4$4a4$4a4$4a4|$10a4$4a4$4a4$4a4|$18a4$4a4$4a4$4a4|$26a4$4a4$4a4$4a4|$34a4$4a4$4a4$4a4',
+    frames: '$2A4$4A4$4A4$4A4|$10A4$4A4$4A4$4A4|$18A4$4A4$4A4$4A4|$26A4$4A4$4A4$4A4|$34A4$4A4$4A4$4A4',
     fps: 12,
     get frameWidth() {
         return frameWidth;
@@ -140,7 +143,68 @@ data.currentFrame = 0;
 //console.log(JSON.stringify(data));
 
 data.colors = {
-    a: 'teal'
+    A: '#787878'
+};
+
+let removeDoubles = _ => {
+    // decode
+    data.frames = data.frames.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
+    // encode
+    data.frames = data.frames.split('').reduce((acc, char) => {
+        if (char === '|') {
+            return acc + char;
+        }
+        if (acc.length === 1) {
+            acc = acc + '1';
+        }
+        if (char === acc.replace(/\d*$/, '').slice(-1)) {
+            return acc.replace(/\d*$/, oldNumber => Number(oldNumber) + 1);
+        }
+        return acc + char + '1';
+    });
+};
+
+Object.keys(data.colors).forEach(key => {
+    colorBlocks.innerHTML = colorBlocks.innerHTML + getColorBlock(key, data.colors[key]);
+});
+
+let addColorBlock = _ => {
+    let num = 65;
+    let key = String.fromCharCode(num);
+    while (key === transparentKey || Object.keys(data.colors).indexOf(key) > -1) {
+        num = num + 1;
+        key = String.fromCharCode(num);
+    }
+    data.colors[key] = '#000000';
+    colorBlocks.innerHTML = colorBlocks.innerHTML + getColorBlock(key, data.colors[key]);
+};
+
+let removeColor = el => {
+    let block = el.parentElement;
+    let key = block.querySelector('[title="Key"]').value;
+    data.frames = data.frames.split(key).join(transparentKey);
+    removeDoubles();
+    data.currentFrame = data.currentFrame;
+    delete data.colors[key];
+    block.remove();
+};
+
+let pendingColorKey = undefined;
+let updateColorKey = el => {
+    if (pendingColorKey === undefined) {
+        return;
+    }
+    let color = data.colors[pendingColorKey];
+    delete data.colors[pendingColorKey];
+    data.colors[el.value] = color;
+    data.frames = data.frames.split(pendingColorKey).join(el.value);
+    data.currentFrame = data.currentFrame;
+};
+
+let updateColor = el => {
+    let block = el.parentElement;
+    let key = block.querySelector('[title="Key"]').value;
+    data.colors[key] = el.value;
 };
 
 Object.keys(data).forEach(key => {
