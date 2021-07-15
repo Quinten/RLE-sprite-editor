@@ -56,7 +56,7 @@
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="fps" title="Frames per second">
 </div>
 <div class="block">
-    <input type="text" class="small" title="Key" value="$">
+    <input type="text" class="small" title="Key" name="transparentKey">
     <input type="text" class="medium" title="Color of key" value="transparent" disabled>
     <button id="addColorButton" title="Add color">&xoplus;</button>
 </div>
@@ -88,6 +88,7 @@ let frameWidth = 8;
 let frameHeight = 8;
 let currentFrame = 0;
 let nFramesWide = 5;
+let transparentKey = '$';
 
 let data = {
     frames: '$2a4$4a4$4a4$4a4|$10a4$4a4$4a4$4a4|$18a4$4a4$4a4$4a4|$26a4$4a4$4a4$4a4|$34a4$4a4$4a4$4a4',
@@ -123,6 +124,14 @@ let data = {
         nFramesWide = v;
         document.querySelector('[name="nFramesWide"').value = nFramesWide;
         onR();
+    },
+    get transparentKey() {
+        return transparentKey;
+    },
+    set transparentKey (v) {
+        this.frames = this.frames.split(transparentKey).join(v);
+        transparentKey = v;
+        this.currentFrame = this.currentFrame;
     }
 };
 
