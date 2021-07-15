@@ -100,6 +100,18 @@ let data = {
         return frameWidth;
     },
     set frameWidth (v) {
+        let delta = v - frameWidth;
+        if (delta > 0) {
+            let pad = '';
+            while (pad.length < delta) {
+                pad = pad + transparentKey;
+            }
+            data.frames = encodedFrames(data.frames.split('|').map(f => decodedFrames(f).split('').map((char, index) => (index % frameWidth === frameWidth - 1) ? char + pad : char).join('')).join('|'));
+            this.currentFrame = this.currentFrame;
+        } else if ( delta < 0) {
+            data.frames = encodedFrames(data.frames.split('|').map(f => decodedFrames(f).split('').map((char, index) => (index % frameWidth >= v) ? '' : char).join('')).join('|'));
+            this.currentFrame = this.currentFrame;
+        }
         frameWidth = v;
         onR();
     },
@@ -146,23 +158,21 @@ data.colors = {
     A: '#787878'
 };
 
-let removeDoubles = _ => {
-    // decode
-    data.frames = data.frames.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
-    // encode
-    data.frames = data.frames.split('').reduce((acc, char) => {
-        if (char === '|') {
-            return acc + char;
-        }
-        if (acc.length === 1) {
-            acc = acc + '1';
-        }
-        if (char === acc.replace(/\d*$/, '').slice(-1)) {
-            return acc.replace(/\d*$/, oldNumber => Number(oldNumber) + 1);
-        }
-        return acc + char + '1';
-    });
-};
+let decodedFrames = str => str.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
+let encodedFrames = str => str.split('').reduce((acc, char) => {
+    if (char === '|') {
+        return acc + char;
+    }
+    if (acc.length === 1) {
+        acc = acc + '1';
+    }
+    if (char === acc.replace(/\d*$/, '').slice(-1)) {
+        return acc.replace(/\d*$/, oldNumber => Number(oldNumber) + 1);
+    }
+    return acc + char + '1';
+});
+
+let removeDoubles = _ => data.frames = encodedFrames(decodedFrames(data.frames));
 
 Object.keys(data.colors).forEach(key => {
     colorBlocks.innerHTML = colorBlocks.innerHTML + getColorBlock(key, data.colors[key]);
