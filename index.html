@@ -48,7 +48,7 @@
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="fps" title="Frames per second">
 </div>
 <div class="block">
-    <input type="text" maxlength="1" class="small" title="Transparent key" name="transparentKey">
+    <input type="text" maxlength="1" class="small" title="Transparent key" name="transparentKey" onfocus="pendingColorKey = undefined;">
     <input type="text" class="medium" value="transparent" title="Transparent color" disabled>
     <button onclick="addColorBlock()" title="Add color">&xoplus;</button>
 </div>
@@ -565,6 +565,36 @@ spritesheet.addEventListener('mousedown', e => {
             data.currentFrame = f;
         }
     }
+});
+
+canvas.addEventListener('mousedown', e => {
+
+    let viewportOffset = canvas.getBoundingClientRect();
+    let left = viewportOffset.left;
+    let top = viewportOffset.top;
+
+    let pointerX = (e.clientX - left) / Number(canvas.style.width.replace('px', ''));
+    let pointerY = (e.clientY - top) /  Number(canvas.style.height.replace('px', ''));
+
+    let gridX = Math.floor(pointerX * frameWidth);
+    let gridY = Math.floor(pointerY * frameHeight);
+
+    let f = gridY * frameWidth + gridX;
+
+    let key = pendingColorKey || transparentKey;
+
+    let frames = data.frames.split('|');
+    let frame = decodedFrames(frames[currentFrame]);
+    while (frame.length < f) {
+        frame = frame + transparentKey;
+    }
+    let pixels = [...frame];
+    pixels.splice(f, 1, key);
+    frame = encodedFrames(pixels.join(''));
+    frames.splice(currentFrame, 1, frame);
+    data.frames = frames.join('|');
+    onR();
+    data.currentFrame = currentFrame;
 });
 
 </script>
