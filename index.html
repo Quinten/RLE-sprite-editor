@@ -41,14 +41,6 @@
     <button onclick="moveFrameDown()" title="Move frame down">&darr;</button>
 </div>
 <canvas id="spritesheet" class="block"></canvas>
-<!--
-<div class="block">
-    <button id="animationBoundsLeftToLeft" title="Animation bounds left to left">&lsaquo;&lcub;</button>
-    <button id="animationBoundsLeftToRight" title="Animation bounds left to right">&lcub;&rsaquo;</button>
-    <button id="animationBoundsRightToLeft" title="Animation bounds right to left">&lsaquo;&rcub;</button>
-    <button id="animationBoundsRightToRight" title="Animation bounds right to right">&rcub;&rsaquo;</button>
-</div>
--->
 <div class="block">
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="frameWidth" title="Frame width">
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="frameHeight" title="Frame height">
@@ -149,12 +141,24 @@ if (window.location.hash !== "") {
 
 document.querySelector('.autosave').checked = autoSave;
 
-let {frameWidth, frameHeight, currentFrame, nFramesWide, transparentKey} = startData;
+let {frameWidth, frameHeight, currentFrame, nFramesWide, transparentKey, aniStart = 0, aniEnd = startData.frames.split('|').length - 1} = startData;
 
 let data = {
     frames: startData.frames,
     colors: startData.colors,
     fps: startData.fps,
+    get aniStart() {
+        return aniStart;
+    },
+    set aniStart(v) {
+        aniStart = v;
+    },
+    get aniEnd() {
+        return aniEnd;
+    },
+    set aniEnd(v) {
+        aniEnd = v;
+    },
     get frameWidth() {
         return frameWidth;
     },
@@ -347,14 +351,14 @@ let onR = e => {
     resizeTOID = setTimeout(_ => {
         canvas.width = frameWidth;
         canvas.height = frameHeight;
-        let w = Math.min(Math.floor(window.innerWidth / frameWidth), 32) * frameWidth;
+        let w = Math.min(Math.floor(window.innerWidth / frameWidth), 16) * frameWidth;
         let h = w / frameWidth * frameHeight;
         canvas.style.width = w + 'px';
         canvas.style.height = h + 'px';
         // tmp
         spritesheet.width = frameWidth * nFramesWide;
         spritesheet.height = frameHeight * Math.ceil(data.frames.split('|').length / nFramesWide);
-        w = Math.min(Math.floor(window.innerWidth / spritesheet.width), 8) * spritesheet.width;
+        w = Math.min(Math.floor(window.innerWidth / spritesheet.width), 4) * spritesheet.width;
         h = w / frameWidth / nFramesWide * frameHeight * Math.ceil(data.frames.split('|').length / nFramesWide);
         spritesheet.style.width = w + 'px';
         spritesheet.style.height = h + 'px';
@@ -370,7 +374,10 @@ let onF = time => {
     if (timer < time - 1000 / data.fps) {
         timer = time;
         if (playing) {
-            data.currentFrame = (data.currentFrame + 1) % (data.frames.split('|').length);
+            data.currentFrame = data.currentFrame + 1;
+            if (data.currentFrame > aniEnd) {
+                data.currentFrame = aniStart;
+            }
         }
     }
 
@@ -406,6 +413,10 @@ let onF = time => {
         ctxSheet.translate((offset % data.nFramesWide) * data.frameWidth, Math.floor(offset / data.nFramesWide) * frameHeight);
         if (mask === true && offset === currentFrame) {
             ctxSheet.clearRect(0, 0, frameWidth, frameHeight);
+        } else if (mask === true && offset >= aniStart && offset <= aniEnd) {
+            ctxSheet.clearRect(0, 0, frameWidth, frameHeight);
+            ctxSheet.fillStyle = 'rgba(0, 0, 0, .15)';
+            ctxSheet.fillRect(0, 0, frameWidth, frameHeight);
         }
         frameData = fData.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
         [...frameData].forEach((c, i) => {
@@ -522,6 +533,39 @@ let handleFile = el => {
     }, false);
     fileReader.readAsDataURL(file);
 };
+
+let nSpritsheetClicks = 0;
+spritesheet.addEventListener('mousedown', e => {
+
+    nSpritsheetClicks = nSpritsheetClicks + 1;
+
+    let viewportOffset = spritesheet.getBoundingClientRect();
+    let left = viewportOffset.left;
+    let top = viewportOffset.top;
+
+    let pointerX = (e.clientX - left) / Number(spritesheet.style.width.replace('px', ''));
+    let pointerY = (e.clientY - top) /  Number(spritesheet.style.height.replace('px', ''));
+
+    let gridX = Math.floor(pointerX * nFramesWide);
+    let gridY = Math.floor(pointerY * Math.ceil(data.frames.split('|').length / nFramesWide));
+
+    let f = gridY * nFramesWide + gridX;
+
+    if (nSpritsheetClicks % 2) {
+        data.currentFrame = f;
+        data.aniStart = f;
+        data.aniEnd = f;
+    } else {
+        if (f < data.aniStart) {
+            data.aniEnd = data.aniStart;
+            data.currentFrame = f;
+            data.aniStart = f;
+        } else {
+            data.aniEnd = f;
+            data.currentFrame = f;
+        }
+    }
+});
 
 </script>
 </body>
