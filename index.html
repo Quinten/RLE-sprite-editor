@@ -16,7 +16,7 @@
         canvas { image-rendering: pixelated; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
         button { height: 3rem; padding: 0 1rem; vertical-align: middle; background: white; border: 0; border-radius: 1.5rem; min-width: 3rem; line-height: 3rem; }
         .block { display: block; margin: 1rem auto; }
-        input { vertical-align: middle; background: white; box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5); border: 0; border-radius: .25em; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
+        input:not([type="checkbox"]) { vertical-align: middle; background: white; box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5); border: 0; border-radius: .25em; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
         input.small { max-width: 3rem; }
         input.medium { max-width: 8rem; }
         input:disabled { background: #828282; }
@@ -64,9 +64,12 @@
 </div>
 <div class="block">
     <button id="importButton">import</button>
-    <button onclick="copyStringToClipboard(window.location, this)">share</button>
+    <button onclick="window.location.hash = btoa(JSON.stringify(data)); copyStringToClipboard(window.location, this);">share</button>
     <button onclick="copyStringToClipboard(data.frames, this)">string</button>
     <button id="copyCodeButton">code</button>
+</div>
+<div class="block">
+    <label><input type="checkbox" onchange="autoSave = this.checked;" class="autosave"> <span>autosave</span></label>
 </div>
 <div class="block">
     <a href="https://github.com/Quinten/RLE-sprite-editor" target="_blank" rel="noopener">read me</a>
@@ -80,22 +83,39 @@ let getColorBlock = (key, color) => `
         <button onclick="removeColor(this)" title="Delete color">&xotime;</button>
     </div>`;
 
-
 let playing = false;
 let mask = true;
 spritesheet.addEventListener('contextmenu', e => {
     mask = false;
 });
 
-let frameWidth = 8;
-let frameHeight = 8;
-let currentFrame = 0;
-let nFramesWide = 5;
-let transparentKey = '$';
+let seed = "eyJmcmFtZXMiOiIkMkE0JDRBNCQ0QTQkNEE0fCQxMEE0JDRBNCQ0QTQkNEE0fCQxOEE0JDRBNCQ0QTQkNEE0fCQyNkE0JDRBNCQ0QTQkNEE0fCQzNEE0JDRBNCQ0QTQkNEE0IiwiZnBzIjoxMiwiZnJhbWVXaWR0aCI6OCwiZnJhbWVIZWlnaHQiOjgsImN1cnJlbnRGcmFtZSI6MCwibkZyYW1lc1dpZGUiOjUsInRyYW5zcGFyZW50S2V5IjoiJCIsImNvbG9ycyI6eyJBIjoiIzc4Nzg3OCJ9fQ==";
+
+let autoSave = true;
+
+let startData = JSON.parse(atob(seed));
+let savedData = localStorage.getItem('RLE-sprite-editor-savefile');
+if (savedData !== null) {
+    startData = JSON.parse(atob(savedData));
+}
+
+if (window.location.hash !== "") {
+    let hashSeed = window.location.hash.slice(1);
+    try {
+        startData = JSON.parse(atob(hashSeed));
+        autoSave = false;
+    } catch (err) {
+    }
+}
+
+document.querySelector('.autosave').checked = autoSave;
+
+let {frameWidth, frameHeight, currentFrame, nFramesWide, transparentKey} = startData;
 
 let data = {
-    frames: '$2A4$4A4$4A4$4A4|$10A4$4A4$4A4$4A4|$18A4$4A4$4A4$4A4|$26A4$4A4$4A4$4A4|$34A4$4A4$4A4$4A4',
-    fps: 12,
+    frames: startData.frames,
+    colors: startData.colors,
+    fps: startData.fps,
     get frameWidth() {
         return frameWidth;
     },
@@ -151,12 +171,6 @@ let data = {
 };
 
 data.currentFrame = 0;
-
-//console.log(JSON.stringify(data));
-
-data.colors = {
-    A: '#787878'
-};
 
 let decodedFrames = str => str.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
 let encodedFrames = str => str.split('').reduce((acc, char) => {
@@ -367,6 +381,10 @@ let onF = time => {
         });
         ctxSheet.restore();
     });
+
+    if (autoSave) {
+        localStorage.setItem('RLE-sprite-editor-savefile', btoa(JSON.stringify(data)));
+    }
 
     // request next frame
     requestAnimationFrame(onF);
