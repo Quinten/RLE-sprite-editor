@@ -66,7 +66,7 @@
     <button id="importButton">import</button>
     <button onclick="window.location.hash = btoa(JSON.stringify(data)); copyStringToClipboard(window.location, this);">share</button>
     <button onclick="copyStringToClipboard(data.frames, this)">string</button>
-    <button id="copyCodeButton">code</button>
+    <button onclick="copyStringToClipboard(getCode(), this)">code</button>
 </div>
 <div class="block">
     <label><input type="checkbox" onchange="autoSave = this.checked;" class="autosave"> <span>autosave</span></label>
@@ -82,6 +82,43 @@ let getColorBlock = (key, color) => `
         <input type="text" class="medium" title="Color" onblur="updateColor(this)"  value="${color}">
         <button onclick="removeColor(this)" title="Delete color">&xotime;</button>
     </div>`;
+
+let getCode = _ => `(_ => {
+let frameWidth = ${frameWidth};
+let frameHeight = ${frameHeight};
+let frames = "${data.frames}";
+let palette = ${JSON.stringify(data.colors)};
+let fps = ${data.fps};
+let currentFrame = 0;
+let timer = 0;
+let canvas = document.createElement('canvas');
+canvas.width = frameWidth;
+canvas.height = frameHeight;
+document.body.appendChild(canvas);
+let ctx = canvas.getContext('2d');
+let onF = time => {
+    if (timer < time - 1000 / fps) {
+        timer = time;
+        currentFrame = (currentFrame + 1) % (frames.split('|').length);
+    }
+    ctx.clearRect(0, 0, frameWidth, frameHeight);
+    let frameData = frames.split('|')[currentFrame];
+    frameData = frameData.replace(/(\\D)(\\d+)/g, (_, char, count) => char.repeat(count));
+    [...frameData].forEach((c, i) => {
+        let color = palette[c];
+        if (color === undefined) {
+            return;
+        }
+        let x = i % frameWidth;
+        let y = Math.floor(i / frameWidth);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, 1, 1);
+    });
+    requestAnimationFrame(onF);
+};
+onF();
+})();
+`;
 
 let playing = false;
 let mask = true;
@@ -415,7 +452,7 @@ let copyStringToClipboard = (str, target) => {
    document.body.removeChild(el);
    setTimeout(_ => {
         target.innerHTML = oldHtml;
-   }, 2000);
+   }, 750);
 }
 
 </script>
