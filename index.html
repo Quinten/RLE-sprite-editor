@@ -16,10 +16,10 @@
         canvas { image-rendering: pixelated; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
         button { height: 3rem; padding: 0 1rem; vertical-align: middle; background: white; border: 0; border-radius: 1.5rem; min-width: 3rem; line-height: 3rem; }
         .block { display: block; margin: 1rem auto; }
-        input:not([type="checkbox"]) { vertical-align: middle; background: white; box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5); border: 0; border-radius: .25em; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
-        input.small { max-width: 3rem; }
-        input.medium { max-width: 8rem; }
-        input:disabled { background: #828282; }
+        input:not([type="checkbox"]):not([type="file"]) { vertical-align: middle; background: white; box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5); border: 0; border-radius: .25em; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
+        input.small:not([type="checkbox"]):not([type="file"]) { max-width: 3rem; }
+        input.medium:not([type="checkbox"]):not([type="file"]) { max-width: 8rem; }
+        input:not([type="checkbox"]):not([type="file"]):disabled { background: #828282; }
         a { color: white; }
     </style>
 </head>
@@ -63,10 +63,12 @@
 <div id="colorBlocks">
 </div>
 <div class="block">
-    <button id="importButton">import</button>
     <button onclick="window.location.hash = btoa(JSON.stringify(data)); copyStringToClipboard(window.location, this);">share</button>
     <button onclick="copyStringToClipboard(data.frames, this)">string</button>
     <button onclick="copyStringToClipboard(getCode(), this)">code</button>
+</div>
+<div class="block">
+    <input type="file" onchange="handleFile(this)">
 </div>
 <div class="block">
     <label><input type="checkbox" onchange="autoSave = this.checked;" class="autosave"> <span>autosave</span></label>
@@ -454,6 +456,72 @@ let copyStringToClipboard = (str, target) => {
         target.innerHTML = oldHtml;
    }, 750);
 }
+
+let handleFile = el => {
+    let file = el.files[0];
+    let fileReader = new FileReader();
+    fileReader.addEventListener('load', _ => {
+        let src = fileReader.result;
+        let img = new Image();
+        img.addEventListener('load', _ => {
+            let nFramesW = Math.floor(img.width / frameWidth);
+            let nFramesH = Math.floor(img.height / frameHeight);
+            let nFrames = nFramesW * nFramesH;
+            let frames = [];
+            let colors = {};
+            let num = 64;
+            let tmpCanvas = document.createElement('canvas');
+            let tmpCtx = tmpCanvas.getContext('2d');
+            tmpCanvas.width = frameWidth;
+            tmpCanvas.height = frameHeight;
+            while(frames.length < nFrames) {
+                let frame = '';
+                let i = frames.length;
+                let sx = i % nFramesW * frameWidth;
+                let sy = Math.floor(i / nFramesW) * frameHeight;
+                tmpCtx.clearRect(0, 0, frameWidth, frameHeight);
+                tmpCtx.drawImage(img, sx, sy, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+                while (frame.length < frameWidth * frameHeight) {
+                    let px = frame.length % frameWidth;
+                    let py = Math.floor(frame.length / frameWidth);
+                    let [r, g, b, a] = tmpCtx.getImageData(px, py, 1, 1).data;
+                    let color = '';
+                    if (a === 0) {
+                        color = 'transparent';
+                    } else if (a === 255) {
+                        color = '#' + r.toString(16) + g.toString(16) + b.toString(16);
+                    } else {
+                        color = `rgba(${r}, ${g}, ${b}, ${a/255})`;
+                    }
+                    let key = transparentKey;
+                    if (color !== 'transparent') {
+                        if (Object.keys(colors).map(c => colors[c]).indexOf(color) === -1) {
+                            while (key === transparentKey) {
+                                num = num + 1;
+                                key = String.fromCharCode(num);
+                                colors[key] = color;
+                            }
+                        } else {
+                            key = Object.keys(colors).reduce((acc, k) => (colors[k] === color) ? k : acc);
+                        }
+                    }
+                    frame = frame + key;
+                }
+                frames.push(encodedFrames(frame));
+            }
+            data.colors = colors;
+            colorBlocks.innerHTML = '';
+            Object.keys(data.colors).forEach(key => {
+                colorBlocks.innerHTML = colorBlocks.innerHTML + getColorBlock(key, data.colors[key]);
+            });
+            data.frames = frames.join('|');
+            data.currentFrame = data.currentFrame;
+            data.nFramesWide = nFramesW;
+        });
+        img.src = src;
+    }, false);
+    fileReader.readAsDataURL(file);
+};
 
 </script>
 </body>
