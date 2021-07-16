@@ -60,6 +60,7 @@
     <button onclick="window.location.hash = btoa(JSON.stringify(data)); copyStringToClipboard(window.location, this);">share</button>
     <button onclick="copyStringToClipboard(data.frames, this)">string</button>
     <button onclick="copyStringToClipboard(getCode(), this)">code</button>
+    <a href="#" id="exportButton" download="spritesheet.png"><button>sheet</button></a>
 </div>
 <div class="block">
     <input type="file" onchange="handleFile(this)">
@@ -407,22 +408,11 @@ let onF = time => {
 
     // clear spritesheet
     ctxSheet.clearRect(0, 0, spritesheet.width, spritesheet.height);
-    if (mask === true) {
-        ctxSheet.fillStyle = 'rgba(0, 0, 0, .35)';
-        ctxSheet.fillRect(0, 0, spritesheet.width, spritesheet.height);
-    }
 
     // draw spritesheet
     data.frames.split('|').forEach((fData, offset) => {
         ctxSheet.save();
         ctxSheet.translate((offset % data.nFramesWide) * data.frameWidth, Math.floor(offset / data.nFramesWide) * frameHeight);
-        if (mask === true && offset === currentFrame) {
-            ctxSheet.clearRect(0, 0, frameWidth, frameHeight);
-        } else if (mask === true && offset >= aniStart && offset <= aniEnd) {
-            ctxSheet.clearRect(0, 0, frameWidth, frameHeight);
-            ctxSheet.fillStyle = 'rgba(0, 0, 0, .15)';
-            ctxSheet.fillRect(0, 0, frameWidth, frameHeight);
-        }
         frameData = fData.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
         [...frameData].forEach((c, i) => {
             let color = data.colors[c];
@@ -436,6 +426,28 @@ let onF = time => {
         });
         ctxSheet.restore();
     });
+
+    exportButton.setAttribute('href', spritesheet.toDataURL());
+
+    // indicate frames included in animation
+    if (mask === true) {
+        let offset = 0;
+        while (offset < Math.ceil(data.frames.split('|').length / nFramesWide) * nFramesWide) {
+            ctxSheet.save();
+            ctxSheet.translate((offset % data.nFramesWide) * data.frameWidth, Math.floor(offset / data.nFramesWide) * frameHeight);
+            if (offset === currentFrame) {
+                // nothing
+            } else if (offset >= aniStart && offset <= aniEnd) {
+                ctxSheet.fillStyle = 'rgba(0, 0, 0, .15)';
+                ctxSheet.fillRect(0, 0, frameWidth, frameHeight);
+            } else {
+                ctxSheet.fillStyle = 'rgba(0, 0, 0, .35)';
+                ctxSheet.fillRect(0, 0, frameWidth, frameHeight);
+            }
+            ctxSheet.restore();
+            offset = offset + 1;
+        }
+    }
 
     if (autoSave) {
         localStorage.setItem('RLE-sprite-editor-savefile', btoa(JSON.stringify(data)));
