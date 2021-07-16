@@ -356,11 +356,11 @@ let onR = e => {
     resizeTOID = setTimeout(_ => {
         canvas.width = frameWidth;
         canvas.height = frameHeight;
-        let w = Math.min(Math.floor(window.innerWidth / frameWidth), 16) * frameWidth;
+        //let w = Math.min(Math.floor(window.innerWidth / frameWidth), 32) * frameWidth;
+        let w = Math.min(window.innerWidth - 40, window.innerHeight / frameHeight * frameWidth - 40);
         let h = w / frameWidth * frameHeight;
         canvas.style.width = w + 'px';
         canvas.style.height = h + 'px';
-        // tmp
         spritesheet.width = frameWidth * nFramesWide;
         spritesheet.height = frameHeight * Math.ceil(data.frames.split('|').length / nFramesWide);
         w = Math.min(Math.floor(window.innerWidth / spritesheet.width), 4) * spritesheet.width;
