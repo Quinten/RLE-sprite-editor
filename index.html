@@ -14,13 +14,14 @@
         body { font-family: sans-serif; background: #282828; color: white; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-size: 1rem; text-align: center; }
         canvas { image-rendering: pixelated; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
-        button { height: 3rem; padding: 0 1rem; vertical-align: middle; background: white; border: 0; border-radius: 1.5rem; min-width: 3rem; line-height: 3rem; }
+        button { height: 3rem; padding: 0 1rem; vertical-align: middle; background: white; border: 0; border-radius: 1.5rem; min-width: 3rem; line-height: 3rem; cursor: pointer; }
         .block { display: block; margin: 1rem auto; }
-        input:not([type="checkbox"]):not([type="file"]) { vertical-align: middle; background: white; box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5); border: 0; border-radius: .25em; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
+        input:not([type="checkbox"]):not([type="file"]) { vertical-align: middle; background: white; box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.5); border: 0; border-radius: .25rem; height: 3rem; width: calc(100% - 2rem); max-width: 16rem; }
         input.small:not([type="checkbox"]):not([type="file"]) { max-width: 3rem; }
         input.medium:not([type="checkbox"]):not([type="file"]) { max-width: 8rem; }
         input:not([type="checkbox"]):not([type="file"]):disabled { background: #828282; }
         a { color: white; }
+        .color-patch { display: inline-block; vertical-align: middle; width: 3rem; height: 3rem; border: 1px white solid; border-radius: .25rem; cursor: pointer; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
     </style>
 </head>
 <body>
@@ -48,6 +49,7 @@
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="fps" title="Frames per second">
 </div>
 <div class="block">
+    <div class="color-patch" onclick="pendingColorKey = undefined;"></div>
     <input type="text" maxlength="1" class="small" title="Transparent key" name="transparentKey" onfocus="pendingColorKey = undefined;">
     <input type="text" class="medium" value="transparent" title="Transparent color" disabled>
     <button onclick="addColorBlock()" title="Add color">&xoplus;</button>
@@ -72,6 +74,7 @@
 
 let getColorBlock = (key, color) => `
     <div class="block">
+        <div class="color-patch" style="background: ${color}" onclick='pendingColorKey = this.parentElement.querySelector("[title=\\"Key\\"]").value;'></div>
         <input type="text" maxlength="1" class="small" title="Key" onfocus="pendingColorKey = this.value;" onblur="updateColorKey(this)" value="${key}">
         <input type="text" class="medium" title="Color" onblur="updateColor(this)"  value="${color}">
         <button onclick="removeColor(this)" title="Delete color">&xotime;</button>
@@ -272,6 +275,8 @@ let updateColor = el => {
     let block = el.parentElement;
     let key = block.querySelector('[title="Key"]').value;
     data.colors[key] = el.value;
+    block.querySelector('.color-patch').style.background = el.value;
+    pendingColorKey = key;
 };
 
 Object.keys(data).forEach(key => {
