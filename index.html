@@ -351,27 +351,33 @@ let ctx = canvas.getContext('2d');
 let ctxSheet = spritesheet.getContext('2d');
 
 // resize canvas with window
+let wWidth = window.innerWidth;
+let wHeight = window.innerHeight;
 let resizeTOID = 0;
 let onR = e => {
     clearTimeout(resizeTOID);
     resizeTOID = setTimeout(_ => {
         canvas.width = frameWidth;
         canvas.height = frameHeight;
-        //let w = Math.min(Math.floor(window.innerWidth / frameWidth), 32) * frameWidth;
-        let w = Math.min(window.innerWidth - 40, window.innerHeight / frameHeight * frameWidth - 40);
+        //let w = Math.min(Math.floor(wWidth / frameWidth), 32) * frameWidth;
+        let w = Math.min(wWidth - 40, wHeight / frameHeight * frameWidth - 40);
         let h = w / frameWidth * frameHeight;
         canvas.style.width = w + 'px';
         canvas.style.height = h + 'px';
         spritesheet.width = frameWidth * nFramesWide;
         spritesheet.height = frameHeight * Math.ceil(data.frames.split('|').length / nFramesWide);
-        w = Math.min(Math.floor(window.innerWidth / spritesheet.width), 4) * spritesheet.width;
+        w = Math.min(Math.floor(wWidth / spritesheet.width), 4) * spritesheet.width;
         h = w / frameWidth / nFramesWide * frameHeight * Math.ceil(data.frames.split('|').length / nFramesWide);
         spritesheet.style.width = w + 'px';
         spritesheet.style.height = h + 'px';
     }, 40);
 };
 onR();
-window.addEventListener('resize', onR);
+window.addEventListener('resize', function () {
+    wWidth = window.innerWidth;
+    wHeight = window.innerHeight;
+    onR();
+});
 
 // animation loop
 let timer = 0;
