@@ -47,7 +47,7 @@ self.addEventListener('fetch', event => {
             return response;
         }).catch(error => {
             //console.log('Fetch failed; returning offline page instead.', error);
-            return caches.match('index.html');
+            event.respondWith(caches.match('index.html'));
         });
     }
 });
