@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
     ) {
         //console.log('Handling fetch event for', event.request.url)
         event.respondWith(fetch(createCacheBustedRequest(event.request.url)).then(response => {
-            caches.open(PRECACHE).then(cache => cache.put(event.request, response.clone()));
+            caches.open(PRECACHE).then(cache => cache.put('index.html', response.clone()));
             return response.clone();
         }).catch(error => {
             //console.log('Fetch failed; returning offline page instead.', error);
