@@ -1,4 +1,4 @@
-const PRECACHE = 'game-template';
+const PRECACHE = 'rle-sprite-editor-001';
 const PRECACHE_URLS = [
     './',
     'index.html'
