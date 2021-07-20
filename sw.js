@@ -41,16 +41,13 @@ self.addEventListener('fetch', event => {
         (event.request.method === 'GET' && event.request.headers.get('accept').indexOf('text/html') > -1)
     ) {
         //console.log('Handling fetch event for', event.request.url)
-        let result = fetch(createCacheBustedRequest(event.request.url)).catch(error => {
-            //console.log('Fetch failed; returning offline page instead.', error);
-            return caches.match('index.html')
-        })
-        event.respondWith(fetch(createCacheBustedRequest(event.request.url)).then(response => {
+        fetch(createCacheBustedRequest(event.request.url)).then(response => {
             cache.put(event.request, response.clone());
+            event.respondWith(response.clone());
             return response;
         }).catch(error => {
             //console.log('Fetch failed; returning offline page instead.', error);
             return caches.match('index.html');
-        }));
+        });
     }
 });
