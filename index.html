@@ -21,7 +21,8 @@
         input.medium:not([type="checkbox"]):not([type="file"]) { max-width: 8rem; }
         input:not([type="checkbox"]):not([type="file"]):disabled { background: #828282; }
         a { color: white; }
-        .color-patch { display: inline-block; vertical-align: middle; width: 3rem; height: 3rem; border: 1px white solid; border-radius: .25rem; cursor: pointer; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
+        .color-patch { display: inline-block; vertical-align: middle; width: 3rem; height: 3rem; line-height: 3rem; border: 1px white solid; border-radius: .25rem; cursor: pointer; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJ0lEQVQoU2N89+7dfwYkICgoiMxlYKSDgv///6O44f3796huoL0CAPpyKx1ry0n4AAAAAElFTkSuQmCC') repeat top left; }
+        .color-patch svg { width: 1rem; height: 1rem; margin: 1rem; filter: drop-shadow( 0px 0px 2px rgba(255, 255, 255, 1)); }
     </style>
 </head>
 <body>
@@ -49,8 +50,8 @@
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="fps" title="Frames per second">
 </div>
 <div class="block">
-    <div class="color-patch" onclick="pendingColorKey = undefined;"></div>
-    <input type="text" maxlength="1" class="small" title="Transparent key" name="transparentKey" onfocus="pendingColorKey = undefined;">
+    <div class="color-patch" onclick="data.pendingColorKey = undefined;"></div>
+    <input type="text" maxlength="1" class="small" title="Transparent key" name="transparentKey" onfocus="data.pendingColorKey = undefined;">
     <input type="text" class="medium" value="transparent" title="Transparent color" disabled>
     <button onclick="addColorBlock()" title="Add color">&xoplus;</button>
 </div>
@@ -75,8 +76,8 @@
 
 let getColorBlock = (key, color) => `
     <div class="block">
-        <div class="color-patch" style="background: ${color}" onclick='pendingColorKey = this.parentElement.querySelector("[title=\\"Key\\"]").value;'></div>
-        <input type="text" maxlength="1" class="small" title="Key" onfocus="pendingColorKey = this.value;" onblur="updateColorKey(this)" value="${key}">
+        <div class="color-patch" style="background: ${color}" onclick='data.pendingColorKey = this.parentElement.querySelector("[title=\\"Key\\"]").value;'></div>
+        <input type="text" maxlength="1" class="small" title="Key" onfocus="data.pendingColorKey = this.value;" onblur="updateColorKey(this)" value="${key}">
         <input type="text" class="medium" title="Color" onblur="updateColor(this)"  value="${color}">
         <button onclick="removeColor(this)" title="Delete color">&xotime;</button>
     </div>`;
@@ -145,12 +146,32 @@ if (window.location.hash !== "") {
 
 document.querySelector('.autosave').checked = autoSave;
 
-let {frameWidth, frameHeight, currentFrame, nFramesWide, transparentKey, aniStart = 0, aniEnd = startData.frames.split('|').length - 1} = startData;
+let {frameWidth, frameHeight, currentFrame, nFramesWide, transparentKey, aniStart = 0, aniEnd = startData.frames.split('|').length - 1, pendingColorKey = undefined} = startData;
 
 let data = {
     frames: startData.frames,
     colors: startData.colors,
     fps: startData.fps,
+    get pendingColorKey() {
+        return pendingColorKey;
+    },
+    set pendingColorKey(v) {
+        pendingColorKey = v;
+        document.querySelectorAll('.color-patch').forEach(patch => {
+            patch.innerHTML = '';
+        });
+        let input = document.querySelector('[value="transparent"]');
+        if (pendingColorKey !== undefined) {
+            input = document.querySelector('[value="' + pendingColorKey + '"]');
+            if (input !== null) {
+                input.parentElement.querySelector('.color-patch').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M290.74 93.24l128.02 128.02-277.99 277.99-114.14 12.6C11.35 513.54-1.56 500.62.14 485.34l12.7-114.22 277.9-277.88zm207.2-19.06l-60.11-60.11c-18.75-18.75-49.16-18.75-67.91 0l-56.55 56.55 128.02 128.02 56.55-56.55c18.75-18.76 18.75-49.16 0-67.91z"/></svg>';
+            }
+        } else {
+            if (input !== null) {
+                input.parentElement.querySelector('.color-patch').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M497.941 273.941c18.745-18.745 18.745-49.137 0-67.882l-160-160c-18.745-18.745-49.136-18.746-67.883 0l-256 256c-18.745 18.745-18.745 49.137 0 67.882l96 96A48.004 48.004 0 0 0 144 480h356c6.627 0 12-5.373 12-12v-40c0-6.627-5.373-12-12-12H355.883l142.058-142.059zm-302.627-62.627l137.373 137.373L265.373 416H150.628l-80-80 124.686-124.686z"/></svg>';
+            }
+        }
+    },
     get aniStart() {
         return aniStart;
     },
@@ -218,6 +239,7 @@ let data = {
 };
 
 data.currentFrame = 0;
+data.pendingColorKey = pendingColorKey;
 
 let decodedFrames = str => str.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
 let encodedFrames = str => str.split('').reduce((acc, char) => {
@@ -260,7 +282,6 @@ let removeColor = el => {
     block.remove();
 };
 
-let pendingColorKey = undefined;
 let updateColorKey = el => {
     if (pendingColorKey === undefined) {
         return;
@@ -277,7 +298,7 @@ let updateColor = el => {
     let key = block.querySelector('[title="Key"]').value;
     data.colors[key] = el.value;
     block.querySelector('.color-patch').style.background = el.value;
-    pendingColorKey = key;
+    data.pendingColorKey = key;
 };
 
 Object.keys(data).forEach(key => {
