@@ -239,7 +239,6 @@ let data = {
 };
 
 data.currentFrame = 0;
-data.pendingColorKey = pendingColorKey;
 
 let decodedFrames = str => str.replace(/(\D)(\d+)/g, (_, char, count) => char.repeat(count));
 let encodedFrames = str => str.split('').reduce((acc, char) => {
@@ -260,6 +259,8 @@ let removeDoubles = _ => data.frames = encodedFrames(decodedFrames(data.frames))
 Object.keys(data.colors).forEach(key => {
     colorBlocks.innerHTML = colorBlocks.innerHTML + getColorBlock(key, data.colors[key]);
 });
+
+data.pendingColorKey = pendingColorKey;
 
 let addColorBlock = _ => {
     let num = 65;
