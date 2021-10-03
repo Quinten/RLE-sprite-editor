@@ -42,6 +42,12 @@
     <button onclick="moveFrameUp()" title="Move frame up">&uarr;</button>
     <button onclick="moveFrameDown()" title="Move frame down">&darr;</button>
 </div>
+<div class="block">
+    <button onclick="flipHorizontal()" title="Flip horizontal">&harr;</button>
+    <button onclick="flipVertical()" title="Flip vertical">&varr;</button>
+    <button onclick="rotateCW()" title="Rotate 90° CW">&orarr;</button>
+    <button onclick="rotateCCW()" title="Rotate 90° CCW">&olarr;</button>
+</div>
 <canvas id="spritesheet" class="block"></canvas>
 <div class="block">
     <input type="number" class="small" inputmode="numeric" pattern="[0-9]*" name="frameWidth" title="Frame width">
@@ -387,6 +393,82 @@ let moveFrameDown = _ => {
     data.currentFrame = (currentFrame + frames.length) % (frames.length + 1);
     frames.splice(currentFrame, 0, newFrame);
     data.frames = frames.join('|');
+};
+
+let flipHorizontal = _ => {
+    let frames = data.frames.split('|');
+    let newFrame = frames[currentFrame];
+    newFrame = decodedFrames(newFrame);
+    if (newFrame.length < frameWidth * frameHeight) {
+        newFrame = newFrame + transparentKey.repeat(frameWidth * frameHeight - newFrame.length);
+    } else if (newFrame.length > frameWidth * frameHeight) {
+        newFrame = newFrame.substr(0, frameWidth * frameHeight);
+    }
+    newFrame = newFrame.match(new RegExp(`.{1,${frameWidth}}`, 'g'));
+    newFrame = newFrame.map(line => line.split('').reverse().join(''));
+    newFrame = newFrame.join('');
+    newFrame = encodedFrames(newFrame);
+    frames.splice(currentFrame, 1, newFrame);
+    data.frames = frames.join('|');
+    data.currentFrame = currentFrame;
+};
+
+let flipVertical = _ => {
+    let frames = data.frames.split('|');
+    let newFrame = frames[currentFrame];
+    newFrame = decodedFrames(newFrame);
+    if (newFrame.length < frameWidth * frameHeight) {
+        newFrame = newFrame + transparentKey.repeat(frameWidth * frameHeight - newFrame.length);
+    } else if (newFrame.length > frameWidth * frameHeight) {
+        newFrame = newFrame.substr(0, frameWidth * frameHeight);
+    }
+    newFrame = newFrame.match(new RegExp(`.{1,${frameWidth}}`, 'g'));
+    newFrame = newFrame.reverse();
+    newFrame = newFrame.join('');
+    newFrame = encodedFrames(newFrame);
+    frames.splice(currentFrame, 1, newFrame);
+    data.frames = frames.join('|');
+    data.currentFrame = currentFrame;
+};
+
+let rotateCW = _ => {
+    let frames = data.frames.split('|');
+    let newFrame = frames[currentFrame];
+    newFrame = decodedFrames(newFrame);
+    if (newFrame.length < frameWidth * frameHeight) {
+        newFrame = newFrame + transparentKey.repeat(frameWidth * frameHeight - newFrame.length);
+    } else if (newFrame.length > frameWidth * frameHeight) {
+        newFrame = newFrame.substr(0, frameWidth * frameHeight);
+    }
+    newFrame = newFrame.match(new RegExp(`.{1,${frameWidth}}`, 'g'));
+    newFrame = newFrame.reverse();
+    newFrame = newFrame.map((line, index) => newFrame.reduce((result, line) => result + line[index], ''));
+    newFrame = newFrame.map(line => line + ((line.length < frameWidth) ? transparentKey.repeat(frameWidth - line.length) : ''));
+    newFrame = newFrame.join('');
+    newFrame = encodedFrames(newFrame);
+    frames.splice(currentFrame, 1, newFrame);
+    data.frames = frames.join('|');
+    data.currentFrame = currentFrame;
+};
+
+let rotateCCW = _ => {
+    let frames = data.frames.split('|');
+    let newFrame = frames[currentFrame];
+    newFrame = decodedFrames(newFrame);
+    if (newFrame.length < frameWidth * frameHeight) {
+        newFrame = newFrame + transparentKey.repeat(frameWidth * frameHeight - newFrame.length);
+    } else if (newFrame.length > frameWidth * frameHeight) {
+        newFrame = newFrame.substr(0, frameWidth * frameHeight);
+    }
+    newFrame = newFrame.match(new RegExp(`.{1,${frameWidth}}`, 'g'));
+    newFrame = newFrame.map(line => line.split('').reverse().join(''));
+    newFrame = newFrame.map((line, index) => newFrame.reduce((result, line) => result + line[index], ''));
+    newFrame = newFrame.map(line => line + ((line.length < frameWidth) ? transparentKey.repeat(frameWidth - line.length) : ''));
+    newFrame = newFrame.join('');
+    newFrame = encodedFrames(newFrame);
+    frames.splice(currentFrame, 1, newFrame);
+    data.frames = frames.join('|');
+    data.currentFrame = currentFrame;
 };
 
 // the 2d drawing api
